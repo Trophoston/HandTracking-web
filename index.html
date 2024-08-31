@@ -10,13 +10,18 @@
   <link rel="stylesheet" href="style.css">
 </head>
 
-<body class="myClass">
+<body>
+  <button id="visc">Start Camera</button>
+  <button id="switchCameraButton">Switch Camera</button>
+
   <div class="block"></div>
+
   <div class="container" style="display: block;">
     <canvas class="output_canvas" width="1280px" height="720px"></canvas>
     <video class="input_video"></video>
   </div>
 </body>
+
 <script type="module">
   const elements = document.getElementsByClassName('myClass');
   const box = document.getElementsByClassName('block');
@@ -25,9 +30,61 @@
   const canvasElement = document.getElementsByClassName('output_canvas')[0];
   const canvasCtx = canvasElement.getContext('2d');
 
+  let currentStream;
+  let cameraIndex = 0;
+
+  async function getCameras() {
+    const devices = await navigator.mediaDevices.enumerateDevices();
+    return devices.filter(device => device.kind === 'videoinput');
+  }
+
+  async function startStream(cameraId) {
+    if (currentStream) {
+      currentStream.getTracks().forEach(track => track.stop()); // Stop the previous stream
+    }
+
+    const constraints = {
+      video: {
+        deviceId: cameraId ? { exact: cameraId } : undefined
+      }
+    };
+    currentStream = await navigator.mediaDevices.getUserMedia(constraints);
+    videoElement.srcObject = currentStream;
+  }
+
+  async function switchCamera() {
+    const cameras = await getCameras();
+    cameraIndex = (cameraIndex + 1) % cameras.length;
+    await startStream(cameras[cameraIndex].deviceId);
+  }
+
+  // Start the first camera on page load
+  startStream();
+
+  document.getElementById('switchCameraButton').addEventListener('click', switchCamera);
+  
+  // Rest of your code remains the same
   document.getElementsByClassName('input_video')[0].style.display = 'none';
   document.getElementsByClassName('output_canvas')[0].style.display = 'none';
-  // or
+
+  document.getElementById('visc').addEventListener('click', visablecam);
+
+  function visablecam() {
+  const outputCanvas = document.getElementsByClassName('output_canvas')[0];
+  const isCanvasVisible = outputCanvas.style.display === 'block';
+
+  if (isCanvasVisible) {
+    outputCanvas.style.display = 'none';
+    for (let i = 0; i < elements.length; i++) {
+      elements[i].style.display = 'block';
+    }
+  } else {
+    outputCanvas.style.display = 'block';
+    for (let i = 0; i < elements.length; i++) {
+      elements[i].style.display = 'none';
+    }
+  }
+}
 
 
   function isFingerUp(landmarks, tipIndex, pipIndex) {
@@ -36,56 +93,56 @@
 
   function countFingersUp(landmarks) {
     let fingersUp = 0;
-    // Thumb
-    // if (landmarks[4].x > landmarks[3].x) { // for thumb, check x-axis due to orientation
-    //     fingersUp++;
-    // }
-    // Index finger
+
     if (isFingerUp(landmarks, 8, 6)) {
       fingersUp++;
-    }
-    // Middle finger
-    if (isFingerUp(landmarks, 12, 10)) {
-        fingersUp++;
-    }
-    // Ring finger
-    if (isFingerUp(landmarks, 16, 14)) {
-        fingersUp++;
-    }
-    // // Pinky
-    // if (isFingerUp(landmarks, 20, 18)) {
-    //     fingersUp++;
-    // }
-    return fingersUp;
-  }
 
-  function fingerdo(fingersUp){
-    if (fingersUp == 1){
-          for (let i = 0; i < box.length; i++) 
+      for (let i = 0; i < box.length; i++) 
           {
             box[i].style.backgroundColor = 'white';
           }
-        }
-        else if (fingersUp == 2){
-          for (let i = 0; i < box.length; i++) 
+    }
+    else
+    {
+      for (let i = 0; i < box.length; i++) 
+          {
+            box[i].style.backgroundColor = 'black';
+          }
+    }
+
+    if (isFingerUp(landmarks, 12, 10)) {
+        fingersUp++;
+
+        
+        for (let i = 0; i < box.length; i++) 
           {
             box[i].style.borderRadius = '100px';
           }
-        }
-        else if (fingersUp == 3){
-          for (let i = 0; i < box.length; i++) 
+    }
+    else
+    {
+      for (let i = 0; i < box.length; i++) 
           {
-            box[i].style.scale = '2';
-          }
-        }
-        else
-        {
-          for (let i = 0; i < box.length; i++) {
-            box[i].style.backgroundColor = 'black';
             box[i].style.borderRadius = '0px';
+          }
+    }
+
+    if (isFingerUp(landmarks, 16, 14)) {
+        fingersUp++;
+        for (let i = 0; i < box.length; i++) 
+          {
+            box[i].style.scale = '3';
+          }
+    }
+    else
+    {
+      for (let i = 0; i < box.length; i++) 
+          {
             box[i].style.scale = '1';
           }
-        }
+    }
+   
+    return fingersUp;
   }
 
   function onResults(results) {
@@ -99,15 +156,11 @@
         drawLandmarks(canvasCtx, landmarks, { color: '#FF0000', lineWidth: 1.5 });
 
         const fingersUp = countFingersUp(landmarks);
-        fingerdo(fingersUp);
         console.log(fingersUp);
-        
-        
       }
     }
     canvasCtx.restore();
   }
- 
 
   const hands = new Hands({
     locateFile: (file) => {
@@ -115,7 +168,7 @@
     }
   });
   hands.setOptions({
-    maxNumHands: 2,
+    maxNumHands: 1,
     modelComplexity: 1,
     minDetectionConfidence: 0.5,
     minTrackingConfidence: 0.5
