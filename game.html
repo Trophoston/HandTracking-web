@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Finger Shape Game</title>
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js" crossorigin="anonymous"></script>
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
   <style>
@@ -20,6 +20,7 @@
       align-items: center;
       justify-content: center;
       height: 100vh;
+      overflow: hidden; /* Prevent scrollbars */
     }
 
     .ui-container {
@@ -29,6 +30,7 @@
       width: 100%;
       max-width: 1200px;
       padding: 1rem;
+      box-sizing: border-box; /* Include padding in width */
     }
 
     .top-bar {
@@ -46,6 +48,7 @@
       background-color: #5f27cd;
       color: white;
       cursor: pointer;
+      font-size: 1rem;
     }
 
     .zones {
@@ -65,12 +68,14 @@
       align-items: center;
       justify-content: center;
       min-height: 200px;
+      box-sizing: border-box;
     }
 
     .output_canvas {
       width: 100%;
       height: auto;
       border-radius: 10px;
+      transform: scaleX(-1); /* Flip horizontally for mirror effect */
     }
 
     .shape-box {
@@ -78,6 +83,7 @@
       height: 100px;
       background-color: white;
       transition: all 0.3s ease;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
     }
 
     .score-timer {
@@ -87,12 +93,85 @@
       font-size: 1.5rem;
     }
 
-    .out_box{
+    .out_box {
       position: absolute;
-
       filter: drop-shadow(0 0 0.75rem #ddd) opacity(.8);
+    }
 
-      
+    /* Start and Game Over Screens */
+    .overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.85);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+      text-align: center;
+      padding: 20px;
+      box-sizing: border-box;
+    }
+
+    .overlay h1 {
+      font-size: 3rem;
+      margin-bottom: 1rem;
+      color: #5f27cd;
+    }
+
+    .overlay p {
+      font-size: 1.2rem;
+      margin-bottom: 1.5rem;
+      max-width: 600px;
+    }
+
+    .overlay button {
+      padding: 1rem 2rem;
+      font-size: 1.5rem;
+      border: none;
+      border-radius: 8px;
+      background-color: #5f27cd;
+      color: white;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    .overlay button:hover {
+      background-color: #4b1fad;
+    }
+
+    .tutorial-shapes {
+      display: flex;
+      gap: 2rem;
+      margin-top: 2rem;
+      margin-bottom: 2rem;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .tutorial-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .tutorial-item .shape-box {
+      border: 2px dashed #9e5de8;
+    }
+
+    #gameOverScreen h2 {
+      font-size: 2.5rem;
+      margin-bottom: 1rem;
+      color: #5f27cd;
+    }
+
+    #gameOverScreen p {
+      font-size: 1.8rem;
+      margin-bottom: 2rem;
     }
 
     @media (max-width: 768px) {
@@ -100,14 +179,28 @@
         flex-direction: column;
         align-items: center;
       }
+      .overlay h1 {
+        font-size: 2.5rem;
+      }
+      .overlay button {
+        font-size: 1.2rem;
+        padding: 0.8rem 1.5rem;
+      }
+      .tutorial-shapes {
+        flex-direction: column;
+        gap: 1rem;
+      }
+      .tutorial-item p {
+        font-size: 1rem;
+      }
     }
   </style>
 </head>
 
 <body>
-  <div class="ui-container">
+  <div class="ui-container" id="gameContainer" style="display: none;">
     <div class="top-bar">
-      <button id="visc">Toggle Camera</button>
+      <button id="visc">Toggle Camera View</button>
       <button id="switchCameraButton">Switch Camera</button>
       <div class="score-timer">
         <span>Score: <span id="score">0</span></span>
@@ -121,14 +214,51 @@
         <canvas class="output_canvas" width="640px" height="480px"></canvas>
 
         <div class="shape-box out_box" id="shapeBox"></div>
-        <!-- <p>Controlled Shape</p> -->
       </div>
 
       <div class="zone task-zone">
+        <!-- <h3>Target Shape</h3> -->
         <div class="shape-box" id="targetBox"></div>
-        <!-- <p>Target Shape</p> -->
       </div>
     </div>
+  </div>
+
+  <div class="overlay" id="startScreen">
+    <h1>Finger Shape Game!</h1>
+    <p>Match the target shapes by adjusting your hand. Your index finger controls the **color**, middle finger the **roundness**, and ring finger the **size**.</p>
+    <div class="tutorial-shapes">
+      <div class="tutorial-item">
+        <div class="shape-box" style="background-color: white;"></div>
+        <p>Index Up: White</p>
+      </div>
+      <div class="tutorial-item">
+        <div class="shape-box" style="background-color: black;"></div>
+        <p>Index Down: Black</p>
+      </div>
+      <div class="tutorial-item">
+        <div class="shape-box" style="border-radius: 100px;"></div>
+        <p>Middle Up: Round</p>
+      </div>
+      <div class="tutorial-item">
+        <div class="shape-box" style="border-radius: 0px;"></div>
+        <p>Middle Down: Square</p>
+      </div>
+      <div class="tutorial-item">
+        <div class="shape-box" style="transform: scale(1.5);"></div>
+        <p>Ring Up: Large</p>
+      </div>
+      <div class="tutorial-item">
+        <div class="shape-box" style="transform: scale(1);"></div>
+        <p>Ring Down: Small</p>
+      </div>
+    </div>
+    <button id="startButton">Start Game</button>
+  </div>
+
+  <div class="overlay" id="gameOverScreen" style="display: none;">
+    <h2>Game Over!</h2>
+    <p>Your Final Score: <span id="finalScore">0</span></p>
+    <button id="replayButton">Play Again</button>
   </div>
 
   <script type="module">
@@ -139,18 +269,31 @@
     const targetBox = document.getElementById('targetBox');
     const scoreEl = document.getElementById('score');
     const timeEl = document.getElementById('time');
+    const gameContainer = document.getElementById('gameContainer');
+    const startScreen = document.getElementById('startScreen');
+    const startButton = document.getElementById('startButton');
+    const gameOverScreen = document.getElementById('gameOverScreen');
+    const finalScoreEl = document.getElementById('finalScore');
+    const replayButton = document.getElementById('replayButton');
 
     let currentStream;
     let cameraIndex = 0;
     let score = 0;
     let timeLeft = 30;
-    let gameOver = false;
+    let gameOver = true; // Start as true so game doesn't run until start button is pressed
+    let countdownInterval;
+    let cameraStarted = false; // Track if camera has been initialized
 
     const targets = [
       { color: 'white', radius: '0px', scale: 1 },
       { color: 'white', radius: '100px', scale: 1 },
       { color: 'white', radius: '100px', scale: 1.5 },
       { color: 'black', radius: '100px', scale: 1.5 },
+      { color: 'black', radius: '0px', scale: 1 },
+      { color: 'white', radius: '0px', scale: 1.5 },
+      { color: 'black', radius: '100px', scale: 1 },
+      { color: 'white', radius: '100px', scale: 1 },
+      { color: 'white', radius: '0px', scale: 1 }
     ];
 
     let currentTarget = {};
@@ -179,22 +322,34 @@
       if (currentStream) {
         currentStream.getTracks().forEach(track => track.stop());
       }
-      const constraints = {
-        video: {
-          deviceId: cameraId ? { exact: cameraId } : undefined
-        }
-      };
-      currentStream = await navigator.mediaDevices.getUserMedia(constraints);
-      videoElement.srcObject = currentStream;
+      try {
+        const constraints = {
+          video: {
+            deviceId: cameraId ? { exact: cameraId } : undefined,
+            width: { ideal: 640 },
+            height: { ideal: 480 }
+          }
+        };
+        currentStream = await navigator.mediaDevices.getUserMedia(constraints);
+        videoElement.srcObject = currentStream;
+        cameraStarted = true; // Camera has successfully started
+      } catch (error) {
+        console.error("Error accessing camera: ", error);
+        alert("Could not start camera. Please ensure you have a camera and have granted permission.");
+        cameraStarted = false;
+      }
     }
 
     async function switchCamera() {
+      if (!cameraStarted) return; // Prevent switching if camera hasn't started
       const cameras = await getCameras();
-      cameraIndex = (cameraIndex + 1) % cameras.length;
-      await startStream(cameras[cameraIndex].deviceId);
+      if (cameras.length > 0) {
+        cameraIndex = (cameraIndex + 1) % cameras.length;
+        await startStream(cameras[cameraIndex].deviceId);
+      } else {
+        alert("No other cameras found.");
+      }
     }
-
-    startStream();
 
     document.getElementById('switchCameraButton').addEventListener('click', switchCamera);
     document.getElementById('visc').addEventListener('click', () => {
@@ -202,14 +357,17 @@
     });
 
     function isFingerUp(landmarks, tipIndex, pipIndex) {
+      // Assuming index 0 is wrist for relative comparison, but generally
+      // comparing tip to PIP joint's Y coordinate is sufficient for "up"
+      // in a typical hand pose where fingers extend upwards.
       return landmarks[tipIndex].y < landmarks[pipIndex].y;
     }
 
     function countFingersUp(landmarks) {
       const up = {
-        index: isFingerUp(landmarks, 8, 6),
-        middle: isFingerUp(landmarks, 12, 10),
-        ring: isFingerUp(landmarks, 16, 14)
+        index: isFingerUp(landmarks, 8, 6),   // Index finger tip (8) vs PIP (6)
+        middle: isFingerUp(landmarks, 12, 10), // Middle finger tip (12) vs PIP (10)
+        ring: isFingerUp(landmarks, 16, 14)    // Ring finger tip (16) vs PIP (14)
       };
 
       const color = up.index ? 'white' : 'black';
@@ -219,6 +377,26 @@
       shapeBox.style.backgroundColor = color;
       shapeBox.style.borderRadius = radius;
       shapeBox.style.transform = `scale(${scale})`;
+
+      // Get the bounding box of the hand for positioning the out_box
+      let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+      landmarks.forEach(lm => {
+        minX = Math.min(minX, lm.x);
+        minY = Math.min(minY, lm.y);
+        maxX = Math.max(maxX, lm.x);
+        maxY = Math.max(maxY, lm.y);
+      });
+
+      // Convert normalized coordinates to pixel coordinates
+      const canvasWidth = canvasElement.width;
+      const canvasHeight = canvasElement.height;
+
+      const handCenterX = (minX + maxX) / 2.3 * canvasWidth;
+      const handCenterY = (minY + maxY) / 2 * canvasHeight;
+
+      // Position the shapeBox near the hand (adjust offset as needed)
+      shapeBox.style.left = `${canvasElement.offsetLeft + handCenterX - (shapeBox.offsetWidth / 2)}px`;
+      shapeBox.style.top = `${canvasElement.offsetTop + handCenterY - (shapeBox.offsetHeight / 2) - 50}px`; // Move it up slightly from center
 
       if (!gameOver && matchShapes({ color, radius, scale })) {
         score++;
@@ -231,15 +409,21 @@
       if (gameOver) return;
       canvasCtx.save();
       canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
+      // Flip the canvas horizontally
+      canvasCtx.translate(canvasElement.width, 0);
+      canvasCtx.scale(-1, 1);
       canvasCtx.drawImage(results.image, 0, 0, canvasElement.width, canvasElement.height);
 
-      if (results.multiHandLandmarks) {
-        for (const landmarks of results.multiHandLandmarks) {
-          drawConnectors(canvasCtx, landmarks, HAND_CONNECTIONS, { color: '#FFF0FF', lineWidth: 1 });
-          drawLandmarks(canvasCtx, landmarks, { color: '#9e5de8', lineWidth: .5 });
+      if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
+        // Only consider the first hand if multiple hands are detected
+        const landmarks = results.multiHandLandmarks[0];
+        drawConnectors(canvasCtx, landmarks, HAND_CONNECTIONS, { color: '#FFF0FF', lineWidth: 1 });
+        drawLandmarks(canvasCtx, landmarks, { color: '#9e5de8', lineWidth: .5 });
 
-          countFingersUp(landmarks);
-        }
+        countFingersUp(landmarks);
+        shapeBox.style.display = 'block'; // Show the controlled shape when hand is detected
+      } else {
+        shapeBox.style.display = 'none'; // Hide if no hand is detected
       }
       canvasCtx.restore();
     }
@@ -259,25 +443,51 @@
 
     const camera = new Camera(videoElement, {
       onFrame: async () => {
-        await hands.send({ image: videoElement });
+        if (!gameOver) { // Only send frames to hands if game is active
+          await hands.send({ image: videoElement });
+        }
       },
       width: 640,
       height: 480
     });
-    camera.start();
 
-    setNewTarget();
+    function startGame() {
+      score = 0;
+      timeLeft = 30;
+      gameOver = false;
+      scoreEl.textContent = score;
+      timeEl.textContent = timeLeft;
+      startScreen.style.display = 'none';
+      gameOverScreen.style.display = 'none';
+      gameContainer.style.display = 'flex'; // Show game UI
+      setNewTarget();
 
-    const countdown = setInterval(() => {
-      if (timeLeft > 0) {
-        timeLeft--;
-        timeEl.textContent = timeLeft;
-      } else {
-        clearInterval(countdown);
-        gameOver = true;
-        alert(`Game Over! Your score: ${score}`);
+      if (!cameraStarted) {
+        startStream(); // Start camera only if not already started
+        camera.start(); // Start MediaPipe camera loop
       }
-    }, 1000);
+
+      clearInterval(countdownInterval); // Clear any existing interval
+      countdownInterval = setInterval(() => {
+        if (timeLeft > 0) {
+          timeLeft--;
+          timeEl.textContent = timeLeft;
+        } else {
+          endGame();
+        }
+      }, 1000);
+    }
+
+    function endGame() {
+      gameOver = true;
+      clearInterval(countdownInterval);
+      finalScoreEl.textContent = score;
+      gameContainer.style.display = 'none'; // Hide game UI
+      gameOverScreen.style.display = 'flex'; // Show game over screen
+    }
+
+    startButton.addEventListener('click', startGame);
+    replayButton.addEventListener('click', startGame); // Replay button also calls startGame
   </script>
 </body>
 
