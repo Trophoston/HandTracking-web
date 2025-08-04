@@ -6,7 +6,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Finger Shape Game</title>
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
-  <script src="https://cdn.jsdelivr.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js"
+    crossorigin="anonymous"></script>
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
   <style>
@@ -20,7 +21,8 @@
       align-items: center;
       justify-content: center;
       height: 100vh;
-      overflow: hidden; /* Prevent scrollbars */
+      overflow: hidden;
+      /* Prevent scrollbars */
     }
 
     .ui-container {
@@ -30,7 +32,8 @@
       width: 100%;
       max-width: 1200px;
       padding: 1rem;
-      box-sizing: border-box; /* Include padding in width */
+      box-sizing: border-box;
+      /* Include padding in width */
     }
 
     .top-bar {
@@ -69,13 +72,16 @@
       justify-content: center;
       min-height: 200px;
       box-sizing: border-box;
+
+      transform: scaleX(-1);
     }
 
     .output_canvas {
       width: 100%;
       height: auto;
       border-radius: 10px;
-      transform: scaleX(-1); /* Flip horizontally for mirror effect */
+      transform: scaleX(-1);
+      /* Flip horizontally for mirror effect */
     }
 
     .shape-box {
@@ -179,20 +185,51 @@
         flex-direction: column;
         align-items: center;
       }
+
       .overlay h1 {
         font-size: 2.5rem;
       }
+
       .overlay button {
         font-size: 1.2rem;
         padding: 0.8rem 1.5rem;
       }
+
       .tutorial-shapes {
         flex-direction: column;
         gap: 1rem;
       }
+
       .tutorial-item p {
         font-size: 1rem;
       }
+    }
+
+    .tutorial-shapes {
+      width: 190px;
+      height: 190px;
+
+      background-color: white;    
+      border-radius: 10px;  
+    }
+
+
+
+    .tutorial-shapes img {
+      width: 200px;
+      height: 200px;
+
+      transform: scale(1.2);
+
+      /* background-color: white; */
+    }
+
+    .tutorial-shapes p {
+      transform: scaleX(-1);
+
+      margin: 0;
+      padding: 0;
+
     }
   </style>
 </head>
@@ -200,11 +237,17 @@
 <body>
   <div class="ui-container" id="gameContainer" style="display: none;">
     <div class="top-bar">
-      <button id="visc">Toggle Camera View</button>
-      <button id="switchCameraButton">Switch Camera</button>
+      <div style="display: none;">
+        <button id="visc">Toggle Camera View</button>
+        <button id="switchCameraButton">Switch Camera</button>
+      </div>
+
+    <h1>Finger Shape Game!</h1>
+
+
       <div class="score-timer">
-        <span>Score: <span id="score">0</span></span>
-        <span>Time: <span id="time">30</span>s</span>
+        <span>คะแนน: <span id="score">0</span></span>
+        <span>เวลา: <span id="time">30</span>s</span>
       </div>
     </div>
 
@@ -225,40 +268,33 @@
 
   <div class="overlay" id="startScreen">
     <h1>Finger Shape Game!</h1>
-    <p>Match the target shapes by adjusting your hand. Your index finger controls the **color**, middle finger the **roundness**, and ring finger the **size**.</p>
-    <div class="tutorial-shapes">
-      <div class="tutorial-item">
-        <div class="shape-box" style="background-color: white;"></div>
-        <p>Index Up: White</p>
+
+    <div class="zone camera-zone" style="height: 10vh; width: 70%; margin: 20px; display: flex; flex-direction: row; align-items: center; justify-content: space-evenly;">
+
+      <div class="tutorial-shapes">
+        <img src="./src/1.png">
+        <p>นิ้วชี้ - ควบคุมสี</p>
       </div>
-      <div class="tutorial-item">
-        <div class="shape-box" style="background-color: black;"></div>
-        <p>Index Down: Black</p>
+
+      <div class="tutorial-shapes">
+        <img src="./src/2.png">
+        <p>นิ้วกลาง - ควบรูปทรง</p>
       </div>
-      <div class="tutorial-item">
-        <div class="shape-box" style="border-radius: 100px;"></div>
-        <p>Middle Up: Round</p>
-      </div>
-      <div class="tutorial-item">
-        <div class="shape-box" style="border-radius: 0px;"></div>
-        <p>Middle Down: Square</p>
-      </div>
-      <div class="tutorial-item">
-        <div class="shape-box" style="transform: scale(1.5);"></div>
-        <p>Ring Up: Large</p>
-      </div>
-      <div class="tutorial-item">
-        <div class="shape-box" style="transform: scale(1);"></div>
-        <p>Ring Down: Small</p>
+
+      <div class="tutorial-shapes">
+        <img src="./src/3.png">
+        <p>นิ้วนาง - ควบคุมขนาด</p>
       </div>
     </div>
-    <button id="startButton">Start Game</button>
+
+    <p>ใช้นิ้วมือในการควบคุมรูปทรงบนหน้าจอให้ตรงกับรูปทรงเป้าหมายเพื่อรับคะแนน คุณมีเวลาเพียง 30 วินาทีใช้ให้คุ้มค่าน้าาา</p>
+    <button id="startButton">เริ่มเกม</button>
   </div>
 
   <div class="overlay" id="gameOverScreen" style="display: none;">
-    <h2>Game Over!</h2>
-    <p>Your Final Score: <span id="finalScore">0</span></p>
-    <button id="replayButton">Play Again</button>
+    <h2 id="specialtext">จบเกม!</h2>
+    <p>คะแนนของคุณ : <span id="finalScore">0</span></p>
+    <button id="replayButton">เล่นอีกครั้ง</button>
   </div>
 
   <script type="module">
@@ -274,7 +310,29 @@
     const startButton = document.getElementById('startButton');
     const gameOverScreen = document.getElementById('gameOverScreen');
     const finalScoreEl = document.getElementById('finalScore');
+    const specialText = document.getElementById('specialtext');
     const replayButton = document.getElementById('replayButton');
+
+    // make func for replay button that will go to startScreen and reset game state
+    replayButton.addEventListener('click', () => {
+      gameOverScreen.style.display = 'none';
+      startScreen.style.display = 'flex';
+      score = 0;
+      timeLeft = 30;
+      scoreEl.textContent = score;
+      timeEl.textContent = timeLeft;
+      gameOver = true; // Reset game state
+      clearInterval(countdownInterval); // Clear any existing countdown
+      if (currentStream) {
+        currentStream.getTracks().forEach(track => track.stop()); // Stop current stream
+        currentStream = null; // Reset stream
+      }
+      cameraStarted = false; // Reset camera state
+      cameraIndex = 0; // Reset camera index
+      setNewTarget(); // Reset target shape
+      shapeBox.style.display = 'none'; // Hide shape box
+    });
+
 
     let currentStream;
     let cameraIndex = 0;
@@ -287,10 +345,10 @@
     const targets = [
       { color: 'white', radius: '0px', scale: 1 },
       { color: 'white', radius: '100px', scale: 1 },
-      { color: 'white', radius: '100px', scale: 1.5 },
-      { color: 'black', radius: '100px', scale: 1.5 },
+      { color: 'white', radius: '100px', scale: 1.8 },
+      { color: 'black', radius: '100px', scale: 1.8 },
       { color: 'black', radius: '0px', scale: 1 },
-      { color: 'white', radius: '0px', scale: 1.5 },
+      { color: 'white', radius: '0px', scale: 1.8 },
       { color: 'black', radius: '100px', scale: 1 },
       { color: 'white', radius: '100px', scale: 1 },
       { color: 'white', radius: '0px', scale: 1 }
@@ -353,7 +411,7 @@
 
     document.getElementById('switchCameraButton').addEventListener('click', switchCamera);
     document.getElementById('visc').addEventListener('click', () => {
-      canvasElement.style.display = canvasElement.style.display === 'none' ? 'block' : 'none';
+      // canvasElement.style.display = canvasElement.style.display === 'none' ? 'block' : 'none';
     });
 
     function isFingerUp(landmarks, tipIndex, pipIndex) {
@@ -372,7 +430,7 @@
 
       const color = up.index ? 'white' : 'black';
       const radius = up.middle ? '100px' : '0px';
-      const scale = up.ring ? 1.5 : 1;
+      const scale = up.ring ? 1.8 : 1;
 
       shapeBox.style.backgroundColor = color;
       shapeBox.style.borderRadius = radius;
@@ -403,6 +461,7 @@
         scoreEl.textContent = score;
         setNewTarget();
       }
+
     }
 
     function onResults(results) {
@@ -482,12 +541,22 @@
       gameOver = true;
       clearInterval(countdownInterval);
       finalScoreEl.textContent = score;
+      if (score >= 10) {
+        specialText.textContent = "ยอดเยี่ยม!";
+      } else if (score >= 5) {
+        specialText.textContent = "ดีมาก!";
+      } else if (score >= 20) {
+        specialText.textContent = "เว่อไปป่าววว!";
+      } else if (score >= 25) {
+        specialText.textContent = "ค้ตเว่อออ!";
+      }else {
+        specialText.textContent = "ไม่เป็นไรลองใหม่!";
+      }
       gameContainer.style.display = 'none'; // Hide game UI
       gameOverScreen.style.display = 'flex'; // Show game over screen
     }
 
-    startButton.addEventListener('click', startGame);
-    replayButton.addEventListener('click', startGame); // Replay button also calls startGame
+    startButton.addEventListener('click', startGame);// Replay button also calls startGame
   </script>
 </body>
 
