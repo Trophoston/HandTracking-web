@@ -5,21 +5,20 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Finger Shape Game</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,100..700;1,100..700&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
   <script src="https://cdn.jsdelivr.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js"
     crossorigin="anonymous"></script>
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,100..700;1,100..700&display=swap');
+    @font-face {
+      font-family: 'line';
+      src: url("./font/LINESeedSansTH_W_Rg.woff");
+    }
 
     body {
       margin: 0;
-
-      font-family: "IBMPlexSans", sans-serif;
+      font-family: 'line';
       background: linear-gradient(to right, #2e003e, #1a1a40);
       color: #fff;
       display: flex;
@@ -215,8 +214,8 @@
       width: 190px;
       height: 190px;
 
-      background-color: white;
-      border-radius: 10px;
+      background-color: white;    
+      border-radius: 10px;  
     }
 
 
@@ -248,7 +247,7 @@
         <button id="switchCameraButton">Switch Camera</button>
       </div>
 
-      <h1>Finger Shape Game!</h1>
+    <h1>Finger Shape Game!</h1>
 
 
       <div class="score-timer">
@@ -275,8 +274,7 @@
   <div class="overlay" id="startScreen">
     <h1>Finger Shape Game!</h1>
 
-    <div class="zone camera-zone"
-      style="height: 10vh; width: 70%; margin: 20px; display: flex; flex-direction: row; align-items: center; justify-content: space-evenly;">
+    <div class="zone camera-zone" style="height: 10vh; width: 70%; margin: 20px; display: flex; flex-direction: row; align-items: center; justify-content: space-evenly;">
 
       <div class="tutorial-shapes">
         <img src="./src/1.png">
@@ -294,8 +292,7 @@
       </div>
     </div>
 
-    <p>ใช้นิ้วมือในการควบคุมรูปทรงบนหน้าจอให้ตรงกับรูปทรงเป้าหมายเพื่อรับคะแนน คุณมีเวลาเพียง 30
-      วินาทีใช้ให้คุ้มค่าน้าาา</p>
+    <p>ใช้นิ้วมือในการควบคุมรูปทรงบนหน้าจอให้ตรงกับรูปทรงเป้าหมายเพื่อรับคะแนน คุณมีเวลาเพียง 30 วินาทีใช้ให้คุ้มค่าน้าาา</p>
     <button id="startButton">เริ่มเกม</button>
   </div>
 
@@ -557,7 +554,7 @@
         specialText.textContent = "เว่อไปป่าววว!";
       } else if (score >= 25) {
         specialText.textContent = "ค้ตเว่อออ!";
-      } else {
+      }else {
         specialText.textContent = "ไม่เป็นไรลองใหม่!";
       }
       gameContainer.style.display = 'none'; // Hide game UI
